@@ -53,7 +53,7 @@ Shader "BlinnPhongSpecular" {
                 half4 diffuseColor = UNITY_SAMPLE_TEX2D(_MainTex, i.uv);
                 float3 positionWS = i.positionWS;
                 float3 normalWS = i.normalWS;
-                half4 color = 1;
+                half4 color = BlinnPhongLight(positionWS, normalWS, _Shininess, diffuseColor, 1);
                 return color;
             }
             ENDHLSL

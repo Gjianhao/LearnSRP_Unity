@@ -77,7 +77,8 @@ namespace Settings {
             var mainLightIndex = GetMainLightIndex(visibleLights);
             if (mainLightIndex >= 0) {
                 var mainLight = visibleLights[mainLightIndex];
-                var forward = (Vector4)mainLight.light.gameObject.transform.forward;
+                // 注意这里的光源方向是负的
+                var forward = - (Vector4)mainLight.light.gameObject.transform.forward;
                 Shader.SetGlobalVector(ShaderProperties.MainLightDirection, forward);
                 Shader.SetGlobalColor(ShaderProperties.MainLightColor, mainLight.finalColor);
             }

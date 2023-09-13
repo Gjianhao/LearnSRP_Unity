@@ -3,8 +3,10 @@ using UnityEngine.Rendering;
 
 namespace Settings {
     [CreateAssetMenu(menuName = "LearnSRP_Unity/HRenderPipelineAsset")]
-    public class HRenderPipelineAsset : RenderPipelineAsset
-    {
+    public class HRenderPipelineAsset : RenderPipelineAsset {
+        private bool _srpBatcher = true;
+
+        public bool SrpBatcher => _srpBatcher;
         protected override RenderPipeline CreatePipeline() {
             return new HRenderPipeline();
         }
@@ -12,14 +14,18 @@ namespace Settings {
 
     class HRenderPipeline : RenderPipeline {
         // 这里的name值对应Shader里的Tag，可以使用内置管线里的 “ForwardBase”
-        private ShaderTagId _shaderTag = new ShaderTagId("HForwardBase"); 
+        private ShaderTagId _shaderTag = new ShaderTagId("HForwardBase");
         private LightConfigurator _lightConfigurator = new LightConfigurator();
+        private ShadowCasterPass _shadowCasterPass = new ShadowCasterPass();
+        private CommandBuffer _command = new CommandBuffer();
+
         protected override void Render(ScriptableRenderContext context, Camera[] cameras) {
             foreach (var camera in cameras) {
                 RenderPerCamera(context, camera);
                 // 设置绘制天空盒的指令，这里只是将指令进行了缓冲
                 context.DrawSkybox(camera);
             }
+
             context.Submit();
         }
 

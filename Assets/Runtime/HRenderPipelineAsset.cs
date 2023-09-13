@@ -1,7 +1,8 @@
+using Runtime.Pass;
 using UnityEngine;
 using UnityEngine.Rendering;
 
-namespace Settings {
+namespace Runtime {
     [CreateAssetMenu(menuName = "LearnSRP_Unity/HRenderPipelineAsset")]
     public class HRenderPipelineAsset : RenderPipelineAsset {
         private bool _srpBatcher = true;

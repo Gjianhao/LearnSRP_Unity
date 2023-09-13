@@ -2,7 +2,7 @@
 using UnityEngine;
 using UnityEngine.Rendering;
 
-namespace Settings {
+namespace Runtime {
     public class LightConfigurator {
         private static int CompareLightRenderMode(LightRenderMode mode1, LightRenderMode mode2) {
             if (mode1 == mode2) {

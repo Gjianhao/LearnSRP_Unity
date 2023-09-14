@@ -63,8 +63,41 @@ namespace Runtime.Pass {
         }
 
         public void Execute(ScriptableRenderContext context, Camera camera, ref CullingResults cullingResults, ref LightConfigurator.LightData lightData) {
+            if (!lightData.HasMainLight()) {
+                // 表示场景无主灯光
+                Shader.SetGlobalVector(ShaderProperties.ShadowParams, new Vector4(0, 0, 0, 0));
+                return;
+            }
+
+            // false 表示该灯光对场景无影响
+            if (!cullingResults.GetShadowCasterBounds(lightData.mainLightIndex, out var lightBounds)) {
+                Shader.SetGlobalVector(ShaderProperties.ShadowParams, new Vector4(0, 0, 0, 0));
+                return;
+            }
+
+            var mainLight = lightData.mainLight;
+            var lightComp = mainLight.light;
+            var shadowMapResolution = GetShadowMapResolution(lightComp);
+            // 得到光线的观察矩阵、投影矩阵
+            cullingResults.ComputeDirectionalShadowMatricesAndCullingPrimitives(lightData.mainLightIndex, 0, 1, new Vector3(1, 0, 0), shadowMapResolution, lightComp.shadowNearPlane,
+                out var matrixView, out var matrixProj, out var shadowSplitData);
+            var matrixWorldToShadowMapSpace = GetWorldToShadowMapSpaceMatrix(matrixProj, matrixView);
             
+            // 生成 ShadowDrawingSettings
+            ShadowDrawingSettings shadowDrawingSettings = new ShadowDrawingSettings(cullingResults, lightData.mainLightIndex,BatchCullingProjectionType.Orthographic);
+            shadowDrawingSettings.splitData = shadowSplitData;
+            
+            Shader.SetGlobalMatrix(ShaderProperties.MainLightMatrixWorldToShadowSpace, matrixWorldToShadowMapSpace);
+            Shader.SetGlobalVector(ShaderProperties.ShadowParams, new Vector4(lightComp.shadowBias, lightComp.shadowNormalBias,lightComp.shadowStrength, 0));
+            
+            // 生成ShadowMapTexture
+            _shadowMapTextureHandler.AcquireRenderTextureIfNot(shadowMapResolution);
+            // 设置投影相关参数
+            SetupShadowCasterView(context, shadowMapResolution, ref matrixView, ref matrixProj);
+            // 绘制阴影
+            context.DrawShadows(ref shadowDrawingSettings);
         }
+
         public class ShadowMapTextureHandler {
             private RenderTargetIdentifier _renderTargetIdentifier = "_HMainShadowMap";
             private int _shadowmapId = Shader.PropertyToID("_HMainShadowMap");

@@ -72,7 +72,8 @@ namespace Runtime {
             return mainLightIndex;
         }
 
-        public void SetupShaderLightingParams(ScriptableRenderContext context, ref CullingResults cullingResults) {
+        private int _mainLightIndex = -1;
+        public LightData SetupShaderLightingParams(ScriptableRenderContext context, ref CullingResults cullingResults) {
             var visibleLights = cullingResults.visibleLights;
             var mainLightIndex = GetMainLightIndex(visibleLights);
             if (mainLightIndex >= 0) {
@@ -87,12 +88,25 @@ namespace Runtime {
             }
 
             Shader.SetGlobalColor(ShaderProperties.AmbientColor, RenderSettings.ambientLight);
+            _mainLightIndex = mainLightIndex;
+            return new LightData() {
+                mainLightIndex = mainLightIndex,
+                mainLight = mainLightIndex >= 0 && mainLightIndex < visibleLights.Length ? visibleLights[mainLightIndex] : default(VisibleLight)
+            };
         }
 
         public class ShaderProperties {
             public static int MainLightDirection = Shader.PropertyToID("_XMainLightDirection");
             public static int MainLightColor = Shader.PropertyToID("_XMainLightColor");
             public static int AmbientColor = Shader.PropertyToID("_XAmbientColor");
+        }
+        public struct LightData {
+            public int mainLightIndex;
+            public VisibleLight mainLight;
+
+            public bool HasMainLight() {
+                return mainLightIndex >= 0;
+            }
         }
     }
 }
